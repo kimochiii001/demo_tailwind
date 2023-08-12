@@ -1,3 +1,27 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Karla:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;0,800;1,200;1,300;1,400;1,500;1,600;1,700;1,800&family=Montserrat:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+/*ct = custom*/
+.ct-top-menu-item{
+    @apply cursor-pointer  hover:text-gray-800 relative lg:after:absolute lg:after:bottom-0 lg:after:left-0 lg:after:bg-light-coffee lg:after:w-0 hover:lg:after:w-full lg:after:h-0.5
+}
+
+.ct-icon{
+    @apply w-5 h-5 inline block
+}
+
+.ct-badge-circle{
+    @apply text-xs text-center rounded-full  px-1.5
+}
+
+.ct-top-menu-expanded{
+   @apply absolute top-20 z-50 w-full bg-white text-center
+}
+
+
+.ct-top-menu-item-mid {
+    @apply cursor-pointer  hover:text-gray-800 relative lg:after:absolute lg:after:right-0 lg:after:left-0 lg:after:bg-light-coffee  lg:after:w-0.5 lg:after:h-full
+}
