@@ -5,6 +5,9 @@ import {create as ipfsHttpClient} from 'ipfs-http-client';
 // const ipfsClient = require("ipfs-http-client");
 import { ethers } from 'ethers';
 import { Buffer } from 'buffer';
+import Tippy from '@tippyjs/react/headless';
+import SnackBarPopup from '../components/SnackBarPopup';
+import SnackBarSuccess from '../components/SnackBarSuccess';
 
 // const client = ipfsHttpClient('https://ipfs.infura.io:5001/api/v0');
 // const client = ipfsHttpClient({ url: "https://ipfs.infura.io:5001/api/v0" });
@@ -38,6 +41,10 @@ const [image, setImage] = useState('');
 const [price, setPrice] = useState(null);
 const [name, setName] = useState('');
 const [description, setDescription] = useState('');
+
+const[loading, setLoading] = useState(false);
+const[onSB, setOnSB] = useState(false);
+
 
 const [listItemSold, setListItemSold] = useState([]);
 
@@ -94,8 +101,16 @@ const createItem = async () => {
     const result = await client.add(JSON.stringify({image, price, name, description}));
     console.log(result);
     mintThenList(result);
+    setLoading(true);
+  
+    console.log('loading', loading);
+     
   } catch(error) {
-    console.log("ipfs uri upload error: ", error)
+    console.log("ipfs uri upload error: ", error);
+    setLoading(false);
+    console.log('false', loading);
+
+   
   }
 }
 
@@ -219,25 +234,65 @@ const loadItemOwnerOf = async () => {
  
 };
 const mintThenList = async (result) => {
-  const uri = `https://ipfs.io/ipfs/${result.path}`;
-  console.log(uri);
 
-//  const balancesOwner = await formatBalance(nft.balanceOf(addressOwner));
-//  console.log(`banlance ${balancesOwner}`);
-  // mint nft 
-  await(await nft.mint(uri)).wait();
-
-  // get tokenId of new nft 
-  const id = await nft.tokenCount();
-  // approve marketplace to spend nft
-  await(await nft.setApprovalForAll(marketplace.address, true)).wait();
-  // add nft to marketplace
-  const listingPrice = ethers.utils.parseEther(price.toString());
-  console.log(listingPrice);
-  await(await marketplace.makeItem(nft.address, id, listingPrice)).wait();
+  try {
+    const uri = `https://ipfs.io/ipfs/${result.path}`;
+    console.log(uri);
+  
+  //  const balancesOwner = await formatBalance(nft.balanceOf(addressOwner));
+  //  console.log(`banlance ${balancesOwner}`);
+    // mint nft 
+    await(await nft.mint(uri)).wait();
+  
+    // get tokenId of new nft 
+    const id = await nft.tokenCount();
+    // approve marketplace to spend nft
+    await(await nft.setApprovalForAll(marketplace.address, true)).wait();
+    // add nft to marketplace
+    const listingPrice = ethers.utils.parseEther(price.toString());
+    console.log(listingPrice);
+    await(await marketplace.makeItem(nft.address, id, listingPrice)).wait();
+    setLoading(true);
+  setOnSB(true);
+    console.log('loading', loading);
+  } catch (error) {
+    console.log('reject', error);
+    setLoading(false);
+    setOnSB(true);
+    console.log('false', loading);
+  }
+ 
 }
+
+const onPopUpErr = () =>{
+  setOnSB(!onSB);
+  setLoading(false)
+  console.log(onSB);
+}
+const onPopUpSuss = () =>{
+  setOnSB(!onSB);
+  setLoading(true)
+  console.log(onSB);
+}
+  
+const handleToClose = (event, reason) => {
+  if ("clickaway" == reason) return;
+  setOnSB(false);
+};
+
   return (
+    
     <div className='w-[80%] mx-auto my-20  '>
+
+      {
+        loading === true ? (<div>
+          <SnackBarSuccess title={'suss'} OnSB={onSB} OnClose={handleToClose}/>
+        </div>) :(
+          <SnackBarPopup title={'error'} OnSB={onSB} OnClose={handleToClose} />
+        )
+      }
+    
+    {/* <SnackBarSuccess title={'error'} OnSB={onSB} OnClose={handleToClose}/> */}
       <div className='flex justify-center items-center mb-20 font-medium'>
             <div className='w-5 h-px bg-gray-400'></div>
             <div className='mx-2 uppercase tracking-wide'> CREATE NFT</div>
@@ -268,7 +323,8 @@ const mintThenList = async (result) => {
         <input onChange={(e) => setPrice(e.target.value)} value={price}  type='number' className='border-2  w-1/2 py-2 px-2' placeholder='Price in ETH...' ></input>
       </div>
       <div>
-        <button onClick={createNFT} className='border-2 w-1/2 py-2 mb-5 uppercase bg-coffee-400 font-medium'>CreateNFT</button>
+       <button onClick={onPopUpErr} className='border-2 w-1/2 py-2 mb-5 uppercase bg-coffee-400 font-medium'>POP UP</button>
+       <button onClick={onPopUpSuss} className='border-2 w-1/2 py-2 mb-5 uppercase bg-coffee-400 font-medium'>POP UP</button>
       </div>
       <div>
         <button onClick={createItem} className='border-2 w-1/2 mb-10 py-2 uppercase bg-coffee-400 font-medium'>createItem</button>

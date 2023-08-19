@@ -1,8 +1,39 @@
+import Tippy from "@tippyjs/react/headless";
 import React, { useEffect, useState } from "react";
 import { Link, NavLink } from "react-router-dom";
+import Popper from "./Popper";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faChevronLeft, faLock, faUser } from '@fortawesome/free-solid-svg-icons';
+import { useDispatch, useSelector } from "react-redux";
+import { getItemList } from "../features/ItemSlice";
+import { Search } from "@mui/icons-material";
+import SearchItem from "./SearchItem";
+import { ethers } from "ethers";
 
-const Header = ({ web3Handler, account }) => {
+
+const Header = ({ web3Handler, account, balance }) => {
   const [onToggle, setOnToggle] = useState(false);
+  const dispath = useDispatch();
+
+  // const {walletAddress, balance} = useSelector(state => state.wallet);
+  // console.log('walletAddress balance: ', walletAddress, balance);
+
+const MENU_ITEM = [
+  {
+    icon: <FontAwesomeIcon icon={faUser}/>,
+    title: "Profile",
+    to:'/profile',
+  },
+
+  {
+    icon: <FontAwesomeIcon icon={faLock}/>,
+    title: "Profile" 
+  },
+  {
+    icon: <FontAwesomeIcon icon={faChevronLeft}/>,
+    title: "Profile" 
+  }
+]
 
   const handleToggle = () => {
     document.getElementById("top-menu").classList.toggle("hidden");
@@ -13,14 +44,16 @@ const Header = ({ web3Handler, account }) => {
   return (
     <div className="py-6 mx-auto  ">
       <nav className="flex flex-row justify-between relative">
-        <div className="logo basis-1/6 text-center text-xl font-semibold cursor-pointer">
+        <div className="logo basis-1/6 text-center text-xl font-semibold cursor-pointer p-[12px]">
           NFT Market
         </div>
         <ul
           id="top-menu"
-          className="basis-4/6 hidden lg:flex lg:justify-center lg:gap-8 font-medium uppercase text-sm text-gray-500 py-1"
+          className="basis-3/6  hidden lg:flex lg:justify-center lg:gap-8 font-medium uppercase text-sm text-gray-500 py-1"
         >
-          <li className="ct-top-menu-item">
+            <SearchItem/>
+          
+          <li className="ct-top-menu-item p-[12px]">
             <NavLink
               style={({ isActive }) => ({
                 color: isActive ? "#333" : "",
@@ -30,7 +63,7 @@ const Header = ({ web3Handler, account }) => {
               Home
             </NavLink>
           </li>
-          <li className="ct-top-menu-item">
+          <li className="ct-top-menu-item p-[12px]">
             <NavLink
               style={({ isActive }) => ({
                 color: isActive ? "#333" : "",
@@ -40,12 +73,12 @@ const Header = ({ web3Handler, account }) => {
               Create
             </NavLink>
           </li>
-          <li className="ct-top-menu-item">
+          {/* <li className="ct-top-menu-item p-[12px]">
             <a href="#">My Listed Items</a>
-          </li>
-          <li className="ct-top-menu-item">
+          </li> */}
+          {/* <li className="ct-top-menu-item p-[12px]">
             <a href="#">My Purchases</a>
-          </li>
+          </li> */}
           {/* <li className='ct-top-menu-item'>
                 <a href='#'>StyleGuide</a>
             </li> */}
@@ -118,7 +151,7 @@ const Header = ({ web3Handler, account }) => {
                     >
                       <path d="M64 32C28.7 32 0 60.7 0 96V416c0 35.3 28.7 64 64 64H448c35.3 0 64-28.7 64-64V192c0-35.3-28.7-64-64-64H80c-8.8 0-16-7.2-16-16s7.2-16 16-16H448c17.7 0 32-14.3 32-32s-14.3-32-32-32H64zM416 272a32 32 0 1 1 0 64 32 32 0 1 1 0-64z" />
                     </svg>
-                    <span className="mr-2">{"10 ETH"}</span>
+                    <span className="mr-2">{balance}</span>
                   </div>
                   <div className="w-0.5 h-5 bg-gray-400"></div>
                   <div>
@@ -127,16 +160,44 @@ const Header = ({ web3Handler, account }) => {
                 </div>
 
                 <div className="w-0.5 h-12 bg-gray-400"></div>
-                <Link to="/profile" className="mx-2">
-                  <span>
-                    {account.slice(0, 5) + "..." + account.slice(38, 42)}
-                  </span>
-                </Link>
+               <Tippy 
+               interactive
+               placement="bottom"
+               render={attrs => (
+                <div className="w-[180px] mt-3 flex-col border-2 rounded-md bg-gray-100 items-start justify-start" tabIndex="-1" {...attrs}>
+                 
+                    <Link to="/profile" className="flex w-full items-center px-5 py-3 hover:bg-gray-400">
+                    <FontAwesomeIcon className="mr-5" icon={faUser} />
+                    <span className="">Profile</span>
+                    </Link>
+                    <button className="flex w-full items-center px-5 py-3  hover:bg-gray-400">
+                    <FontAwesomeIcon className="mr-5" icon={faUser} />
+                    <span className="">Setting</span>
+                    </button>
+                    <button className="flex w-full items-center px-5 py-3  hover:bg-gray-400">
+                    <FontAwesomeIcon className="mr-5" icon={faLock} />
+                    <span className="">Log Out</span>
+                    </button>
+
+                 
+                </div>
+              )}
+               >
+                
+                    <div  className="mx-2">
+                      <span>
+                        {account.slice(0, 5) + "..." + account.slice(38, 42)}
+                      </span>
+                    </div>
+                 
+               </Tippy>
               </div>
             </div>
           ) : (
             <button
-              onClick={web3Handler}
+              onClick={() => {web3Handler().then(async () =>{
+                await dispath(getItemList());
+              })}}
               className="asis-0/6 font-semibold  flex justify-start uppercase text-sm items-center ml-5"
             >
               Connect Wallet

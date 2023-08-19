@@ -7,6 +7,7 @@ import { publicRoutes } from './routes';
 import React, { useEffect, useState } from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import {useSelector, useDispatch} from 'react-redux';
+import {marketplace, nft} from './contract/contract';
 
 
 
@@ -17,6 +18,9 @@ import Web3Modal from 'web3modal';
 import DetailItem from './components/DetailItem';
 import Profile from './pages/Profile';
 import { getUser } from './features/userSlice';
+import { getItemList } from './features/ItemSlice';
+import { setWalletInfo } from './features/wallet.reducer';
+import Spinner from 'react-spinner-material';
 const rpcURL = 'https://rpc.ankr.com/fantom_testnet';
 function App() {
   
@@ -24,49 +28,77 @@ function App() {
   const marketplaceABI = require("./marketplace-abi.json");
   const nftABI = require("./nft-abi.json");
   const [loading, setLoading] = useState(true)
-  const [account, setAccount] = useState(null)
+  const [account, setAccount] = useState(0)
+  const [balance, setBalance] = useState(null)
+
   const [nft, setNFT] = useState({})
   const [marketplace, setMarketplace] = useState({});
   const [getSigner, setGetSigner] = useState(null);
-//  const web3 = new Web3(rpcURL);
-  // const marketplaceAddress ='0x7531F454fB9e36787389eC2A65ca564A9F2a9A39';
-  // const NFTAddress ='0x84e5d7574E1c192Fa79B91ba1Fa87D0E50D692a6';
-  //   const marketplaceAddress ='0xbA546d8D596330976e3c7109E30f592903963C88';
-  // const NFTAddress ='0xAA5aE60917D8CF726ebdBBDB71f68184c5575F34';
-  const marketplaceAddress ='0xBEa6c10c63D6c0256Cb4e70039Cfa40A247A3448';
+
+  const marketplaceAddress ='0x20689856Bf449019D6ecF879b638D95Fc75eA559';
   const NFTAddress ='0x3A3A6bd75466c58fd822682eAe5E80f770EcE458';
 
   const userId = useSelector(state => state.user.current);
   const dispath = useDispatch();
   console.log('userId', userId);
-  const handleConnectUser =  () => {
-    dispath(getUser());
+  const handleConnectUser = async () => {
+    await dispath(getUser()).then( async() => {
+      await dispath(getItemList())
+    });
   }
 
-  const web3Handler = async () => {
- 
+  // const [account, setaccount] = useState('');
 
-    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-    setAccount(accounts[0]);
-  
+  // const connectMetaMask = async () => {
+  //   web3Handler().then( async() => {
+  //     await dispath(getItemList())
+  //   });
+  // }
 
-    // Get provider from Metamask
-    // const provider = new ethers.providers.Web3Provider(window.ethereum)
-      // const provider = new ethers.providers.JsonRpcProvider(rpcURL);
-      const provider = new ethers.providers.Web3Provider(window.ethereum, "any");
 
-      // const connectedWallet = wallet.connect(provider);
-    // Set signer
-    const signer = provider.getSigner();
-    // console.log(signer);
-    // const address = await signer.getAddress();
+//   const web3Handler = async () => {
 
-  
-    loadContracts(signer);
     
 
-  }
+//     const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+//     // setaccount(accounts[0]);
+//     let walletInfo = {
+//       walletAddress:accounts[0],
+//       balance: 0
+//     }
+//     if(accounts) {
+      
+// const provider = new ethers.providers.Web3Provider(window.ethereum, "any");
+// const signer = provider.getSigner();
+// const getCurrentAccount = signer.getAddress();
+// console.log('Current account:',(await getCurrentAccount).toString());
+// const balance = await provider.getBalance(walletInfo.walletAddress);
+
+
+// walletInfo.balance = ethers.utils.formatEther(balance);
+//     }
+//     dispath(setWalletInfo(walletInfo));
  
+  
+//     // loadContracts(signer);
+    
+
+//   }
+ 
+
+const connectDapp = async () => {
+  const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+  setAccount(accounts[0]);
+  const provider = new ethers.providers.Web3Provider(window.ethereum, "any");
+  const signer = provider.getSigner();
+  const getCurrentAccount = signer.getAddress();
+  // console.log('Current account:',(await getCurrentAccount).toString());
+  const balance = await provider.getBalance(getCurrentAccount);
+  setBalance(ethers.utils.formatEther(balance));
+
+  loadContracts(signer);
+
+}
 
   
   const loadContracts = async (signer) => {
@@ -81,22 +113,72 @@ function App() {
     setLoading(false);
   }
 
+  
+  
+  
+
+// useEffect(() => {
+//   if (!window.ethereum) {
+//     // Nothing to do here... no ethereum provider found
+//     return;
+//   }
+//   const accountWasChanged = (accounts) => {
+//     setaccount(accounts[0]);
+//     console.log('accountWasChanged');
+//   }
+//   const getAndSetAccount = async () => {
+//     const changedAccounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+//     setaccount(changedAccounts[0]);
+//     console.log('getAndSetAccount');
+//   }
+//   const clearAccount = () => {
+//     setaccount('');
+//     console.log('clearAccount');
+//   };
+//   window.ethereum.on('accountsChanged', accountWasChanged);
+//   window.ethereum.on('connect', getAndSetAccount);
+//   window.ethereum.on('disconnect', clearAccount);
+//   window.ethereum.request({ method: 'eth_requestAccounts' }).then(accounts => {
+//     console.log('accounts', accounts);
+//     // No need to set account here, it will be set by the event listener
+//   }, error => {
+//     // Handle any UI for errors here, e.g. network error, rejected request, etc.
+//     // Set state as needed 
+//   })
+//   // return () => {
+//   //   // Return function of a non-async useEffect will clean up on component leaving screen, or from re-reneder to due dependency change
+//   //   window.ethereum.off('accountsChanged', accountWasChanged);
+//   //   window.ethereum.off('connect', getAndSetAccount);
+//   //   window.ethereum.off('disconnect', clearAccount);
+//   // }
+// }, [/* empty array to avoid re-request on every render, but if you have state related to a connect button, put here */]);
  
 
   return (
   
     <Router>
       <div className="App max-w-screen-2xl text text-base mx-auto px-8  font-Karla">
-        <Header web3Handler={handleConnectUser} account={userId}/>
-        <Routes>      
-          <Route path='/' element={<Home marketplace={marketplace} nft={nft} account={userId} />}></Route>
-          <Route path='/create' element={<Create marketplace={marketplace} nft={nft}/>}></Route>
-          <Route path='/detailItem/:itemId' element={<DetailItem marketplace={marketplace} nft={nft} account={account}/>}></Route>
+        <Header web3Handler={connectDapp}  account={account} balance={balance} />
+        {
+          loading ? (
+            <div className='flex justify-center item-center h-[80px] my-60'>
+              <Spinner radius={60} color={"#333"} stroke={2} visible={true}/>
+              <p className='mx-10 py-3'>Awaiting MetaMask Connection</p>
 
-          <Route path='/profile' element={<Profile marketplace={marketplace} nft={nft} account={account}/>}></Route>
-
-
-        </Routes>
+            </div>
+          ) : (
+            <Routes>      
+            <Route path='/' element={<Home marketplace={marketplace} nft={nft} account={account} />}></Route>
+            <Route path='/create' element={<Create marketplace={marketplace} nft={nft}/>}></Route>
+            <Route path='/detailItem/:itemId' element={<DetailItem marketplace={marketplace} nft={nft} account={account}/>}></Route>
+  
+            <Route path='/profile' element={<Profile marketplace={marketplace} nft={nft} account={account}/>}></Route>
+  
+  
+          </Routes>
+          )
+        }
+       
       
       </div>
     </Router>

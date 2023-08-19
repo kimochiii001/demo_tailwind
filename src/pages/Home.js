@@ -11,11 +11,34 @@ import {useSelector, useDispatch} from 'react-redux'
 import { getItemList } from "../features/ItemSlice";
 import { unwrapResult } from "@reduxjs/toolkit";
 import { getUser } from "../features/userSlice";
+import LoadingCard from "../components/LoadingCard";
+import MenuTab from "../components/MenuTab";
+import Progress from "../components/SpinnerLoading";
 
 const Home = ({ marketplace, nft, account }) => {
-  const itemList = useSelector(state => state.items.items);
+
+  const [title, setTitle] = useState('');
+    const [loadingPopUp, setLoadingPopUp] = useState(false);
+    const [open, setOpen] = useState(false);
+    const handleToClose = (event, reason) => {
+      if ("clickaway" == reason) return;
+      setOpen(false);
+  };
+
+  const handleClickEvent = () => {
+      setOpen(true);
+  };
+  // const itemList = useSelector(state => state.items.items);
+  // const loadingItem = useSelector(state => state.items.loading);
+  // const loadingItem = useSelector(state => state.items.loading);
+
+
   // const userId = useSelector(state => state.user.current);
-  console.log('itemList', itemList);
+  // console.log('loadingItem', loadingItem);
+
+  // console.log('itemList', itemList);
+  // console.log('lenght', itemList.length);
+
 
   
   const dispath = useDispatch()
@@ -38,9 +61,8 @@ const Home = ({ marketplace, nft, account }) => {
     for (let i = 1; i <= itemCount; i++) {
       const item = await marketplace.items(i);
       // if (!item.sold) {
-      console.log(`sold ${!item.sold}`);
-      // get uri url from nft contract
-      const uri = await nft.tokenURI(item.tokenId);
+      if(!item.sold) {
+        const uri = await nft.tokenURI(item.tokenId);
       // use uri to fetch the nft metadata stored on ipfs
       const response = await fetch(uri);
       const metadata = await response.json();
@@ -57,10 +79,16 @@ const Home = ({ marketplace, nft, account }) => {
         image: metadata.image,
         sold: item.sold,
       });
+      }
+
+      // get uri url from nft contract
+      
       // }
     }
-    setLoading(false);
     setItems(items);
+    setLoading(false);
+
+    
   };
 
   const loadMarketplaceItemsOnSale = async () => {
@@ -100,10 +128,21 @@ const Home = ({ marketplace, nft, account }) => {
 
 
   const buyMarketItem = async (item) => {
-    await (
-      await marketplace.purchaseItem(item.itemId, { value: item.totalPrice })
-    ).wait();
-    loadMarketplaceItems();
+    try {
+      await (
+        await marketplace.purchaseItem(item.itemId, { value: item.totalPrice})
+      ).wait();
+      // loadMarketplaceItems();
+
+      handleClickEvent();
+      setLoadingPopUp(true);
+    } catch (error) {
+      handleClickEvent();
+            setLoadingPopUp(false);
+            console.log('err buy', error);
+    }
+   
+    
   };
   const setPriceProduct = async () => {
     const id = await nft.tokenCount();
@@ -122,102 +161,82 @@ const Home = ({ marketplace, nft, account }) => {
     console.log(balance);
   }
 //to={`/detailItem/${item.itemId.toString()}`}
+  // useEffect(() => {
+
+  //   const connectAccount = async () => {
+     
+
+  //     // console.log('account', account);
+  //     await dispath(getItemList());
+    
+  //   }
+    
+  //   connectAccount();
+   
+  // }, []);
+
   useEffect(() => {
+    loadMarketplaceItems();
+  },[]);
 
-    const connectAccount = async () => {
-      if (account === '') {
-        return;
-      };
 
-      // console.log('account', account);
-      const actionResult =  dispath(getItemList());
-      // const actionUser = dispath(getUser());
-    //    await unwrapResult(actionUser);
-    //  await unwrapResult(actionResult);
-      // loadMarketplaceItems();
-    }
-    
-    connectAccount();
-   
-
-    // loadMarketplaceItemsOnSale();
-   
-  }, []);
+if(loading)
   return (
-    <div>
-      <Slider />
-      {/* <Story/> */}
-      <div className="w-[80%] mx-auto my-20 ">
-        <div className="flex justify-center items-center mb-20">
-          <div className="w-5 h-px bg-gray-400"></div>
-     
-          {/* <div className="mx-2 uppercase tracking-wide"> {itemList} </div> */}
-          {/* <div className="mx-2 uppercase tracking-wide"> {userId}</div> */}
+<div className="w-[90%] mx-auto my-10 ">
+  <h2> loading...</h2>
 
-          <div className="w-5 h-px bg-gray-400"></div>
+</div>
+)
+  return (
+    <div className="relative">
+       <div className="absolute top-0 left-0 mb-20">
+          <h1 className="text-amber-600 text-8xl font-bold"> haha</h1>
         </div>
+      {/* <Slider /> */}
+      {/* <MenuTab/> */}
+      {/* <Story/> */}
+      <div className=" w-[90%] mx-auto my-10 ">
 
-        <div className="grid grid-rows-1 lg:grid-cols-4   gap-4">
-          {items.length > 0 ? (
-            <div className="">
-              {items.map((item, idx) => (
-                <div  key={idx}>
-                  <div className="h-[340px] border-2 border-coffee-400">
-                    <a href="#">
-                      <div className="group w-full h-full relative hover:bg-gray-900 hover:bg-opacity-20 ">
-                        <img
-                          src={`${item.image}`}
-                          className="w-full h-full bg-no-repeat bg-cover"
-                        />
-                        <div className=" absolute w-[100px] bg-white text-center  py-2 px-4 top-2 right-2 font-medium text-coffee-400">
-                          {item.sold === true ? "Sold" : "On Sale"}
-                        </div>
-                        {item.sold !== true && item.seller !== account ? (
-                          <button
-                            onClick={() => buyMarketItem(item)}
-                            className=" hidden group-hover:block absolute bottom-2 w-11/12 left-1/2 -translate-x-1/2 bg-white text-center  py-2 px-4 bottom-2 tracking-wide font-medium"
-                          >
-                            BUY FOR
-                          </button>
-                        ) : (
-                          <p> </p>
-                        )}
-                      </div>
-                    </a>
-                  </div>
-
-                  <div className="text-center py-5">
-                    <a href="#" className="">
-                      <div className="uppercase font-medium hover:opacity-80 mb-2">
-                        {item.name}
-                      </div>
-                      
-                    </a>
-
-                    <div>
-                      <span className="text-coffee-400 font-medium">
-                        {ethers.utils.formatEther(item.totalPrice)} ETH
-                      </span>
-                      <span className="ml-2  text-gray-400">
-                      {item.itemId.toString()}
-                      </span>
-                    </div>
-                    <div className='mb-10'>
        
-      
-     </div>
-   
-    
+        {/* <div className="flex justify-center items-center mb-20">
+          <div className="w-5 h-px bg-gray-400"></div>
      
-      
+          <div className="mx-2 uppercase tracking-wide"> NFT  </div>
+          <div className="mx-2 uppercase tracking-wide"> {userId}</div>
 
-                    
-                  </div>
-                </div>
-              ))}
+          <div className="w-5 h-px bg-gray-400"></div>
+        </div> */}
+
+        <div className="">
+       
+          {items.length > 0  ? (
+
+            <div className="grid grid-rows-1 lg:grid-cols-4   gap-4">
+              {
+                 items.map((item, idx) => (
+                  <Items item={item} key={idx}  onBuy={true} account={account} OnClose={handleToClose} open={open} loading={loadingPopUp} onClick={() => {
+                    buyMarketItem(item).then( async() => {
+                      await loadMarketplaceItems();
+                    })
+                  }} />
+                ))
+              }
             </div>
+           
+            
+   
           ) : (
-            <Items />
+           
+            <div className=" grid grid-rows-1 lg:grid-cols-4   gap-4">
+             <p> CHƯA COS SAN PHAM</p>
+             
+            
+              
+
+
+            </div>
+            
+            // <Items />
           )}
         </div>
       </div>

@@ -1,34 +1,8 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import {ethers} from 'ethers';
+import {BigNumber, ethers} from 'ethers';
 
+import {marketplace, nft} from '../contract/contract';
 
-// {
-//     totalPrice:'',
-   
-//     itemId: '',
-//     seller: '',
-//     name: '',
-//     description: '',
-//     image: '',
-//     sold: false,
-// },
-const marketplaceABI = require("../marketplace-abi.json");
-  const nftABI = require("../nft-abi.json");
-const provider = new ethers.providers.Web3Provider(window.ethereum, "any");
-const marketplaceAddress ='0xBEa6c10c63D6c0256Cb4e70039Cfa40A247A3448';
-const NFTAddress ='0x3A3A6bd75466c58fd822682eAe5E80f770EcE458';
-// const connectedWallet = wallet.connect(provider);
-// Set signer
-    const signer = provider.getSigner();
-
-
-    // Get deployed copies of contracts
-    const marketplace = new ethers.Contract(marketplaceAddress, marketplaceABI, signer)
- 
-    console.log(marketplace);
-
-    const nft = new ethers.Contract(NFTAddress, nftABI, signer);
-    console.log(nft);
  
 
 const initialState = {
@@ -71,6 +45,44 @@ export const getItemList = createAsyncThunk(
 );
 
 
+
+export const addNewItem = createAsyncThunk('items/addNewItem', async(_, thunkAPI) => {
+  
+})
+
+export const getItemListOwnerOf = createAsyncThunk(
+  'items/getItemList',
+  async(_, thunkAPI)=>{
+    const item = await marketplace.getItemOwnerOf();
+    let items = [];
+
+  for (let i = 0; i < item.length; i++) {
+
+    // get uri url from nft contract
+    const uri = await nft.tokenURI(item[i].tokenId);
+    // use uri to fetch the nft metadata stored on ipfs
+    const response = await fetch(uri);
+    const metadata = await response.json();
+    // get total price of item (item price + fee)
+    const totalPrice = await marketplace.getTotalPrice(item[i].itemId);
+    
+    const priceFinal = ethers.utils.formatEther(totalPrice);
+
+    items.push({
+      priceFinal,
+     
+      itemId: item[i].itemId.toString(),
+      seller: item[i].seller,
+      name: metadata.name,
+      description: metadata.description,
+      image: metadata.image,
+      sold: item[i].sold,});    
+  }
+  
+        return items;
+  }
+);
+
 const itemSlice = createSlice({
     name: 'items',
     initialState,
@@ -79,11 +91,24 @@ const itemSlice = createSlice({
        
     },
 
-    extraReducers(builder) {
-        builder.addCase(getItemList.fulfilled, (state, action) =>{
-            state.items = action.payload;
-
-        })
+    extraReducers: {
+      [getItemList.pending]: (state) => {
+        state.loading = true;
+    },
+    [getItemList.rejected]: (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+    },
+      [getItemList.fulfilled]: (state, action) => {
+        state.loading = false;
+        state.items = action.payload;
+    },
+    [getItemListOwnerOf.fulfilled] : (state, action) => {
+      state.loading = false;
+      state.items = action.payload;
+    },
+    
+       
     }
 
 })
