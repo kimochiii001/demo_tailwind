@@ -4,6 +4,7 @@ import { ethers } from "ethers";
 import { useDispatch, useSelector } from "react-redux";
 import { getItemListOwnerOf } from "../features/ItemSlice";
 import { Link } from "react-router-dom";
+import ArtItem from "../components/ArtItem";
 const Profile = ({ marketplace, nft, account }) => {
   // const itemListOwner = useSelector(state => state.items.items);
   // const itemList = useSelector(state => state.items.items);
@@ -18,13 +19,9 @@ const Profile = ({ marketplace, nft, account }) => {
 
     try {
       const item = await marketplace.getItemOwnerOf();
+      // console.log('item profile', item)
       let items = [];
-      // const uri = await nft.tokenURI(item[2].tokenId);
-      // console.log('item owner uri 2', uri);
-      // console.log('item owner of 2', item[2]);
-
-      
-        //  let soldItems = [];
+     
   
     for (let i = 0; i < item.length; i++) {
       console.log('item owner', item[i]);
@@ -37,24 +34,28 @@ const Profile = ({ marketplace, nft, account }) => {
       // get total price of item (item price + fee)
       const totalPrice = await marketplace.getTotalPrice(item[i].itemId);
       
-      const priceFinal = ethers.utils.formatEther(totalPrice);
-
+      // const priceFinal = ethers.utils.formatEther(totalPrice);
+      const itemIdNumber = Number(item[i].itemId);
 
          items.push({
-        totalPrice,
-       
-        itemId: item[i].itemId,
-        seller: item[i].seller,
-        name: metadata.name,
-        description: metadata.description,
-        image: metadata.image,
-        sold: item[i].sold,});    
+          totalPrice: totalPrice,
+           
+          itemId:itemIdNumber ,
+          seller: item.seller,
+          name: metadata.title,
+          description: metadata.description,
+          image: metadata.image,
+          sold: item.sold,
+      
+      
+      });    
   
-    
+     
     }
-
     setListItem(items);
     setLoading(false);
+
+   
   
    
   
@@ -70,7 +71,10 @@ const Profile = ({ marketplace, nft, account }) => {
   };
 
   useEffect(() => {
-    loadItemOwnerOf();
+
+      loadItemOwnerOf();
+
+    
   }, []);
 
   if (loading)
@@ -127,10 +131,12 @@ const Profile = ({ marketplace, nft, account }) => {
 
           <div className="">
             {listItem.length > 0 ? (
-              <div className="grid grid-rows-1 lg:grid-cols-4   gap-4">
-                {listItem.map((item, idx) => (
-                  <Items item={item} key={idx}  account={account} />
-                ))}
+              <div className="grid grid-rows-1 lg:grid-cols-4   gap-4 pb-10">
+                 {
+            listItem.map((item, idx) => (
+              <ArtItem nft={item} key={idx} onBuy={false}/>
+            ))
+          }
               </div>
             ) : (
               <p>ko co sp</p>

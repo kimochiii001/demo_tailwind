@@ -14,6 +14,14 @@ import { getUser } from "../features/userSlice";
 import LoadingCard from "../components/LoadingCard";
 import MenuTab from "../components/MenuTab";
 import Progress from "../components/SpinnerLoading";
+import PopUpLoading from "../components/PopUpLoading";
+import ArtWork from "../components/ArtWork";
+import ArtItem from "../components/ArtItem";
+import ShowNft from "../components/ShowNft";
+import SetPrice from "../components/SetPrice";
+import Loading from "../components/Loading";
+import { setGlobalState, setLoadingMsg } from "../global";
+import ReactPaginate from 'react-paginate';
 
 const Home = ({ marketplace, nft, account }) => {
 
@@ -24,7 +32,11 @@ const Home = ({ marketplace, nft, account }) => {
       if ("clickaway" == reason) return;
       setOpen(false);
   };
+  const pageCount = 4;
 
+  const handlePageClick = () => {
+
+  }
   const handleClickEvent = () => {
       setOpen(true);
   };
@@ -53,6 +65,7 @@ const Home = ({ marketplace, nft, account }) => {
 
 
   const loadMarketplaceItems = async () => {
+    setLoadingMsg('loading...');
     // Load all unsold items
     const itemCount = await marketplace.itemCount();
     console.log(`ITEM COUNT: ${itemCount}`);
@@ -87,43 +100,87 @@ const Home = ({ marketplace, nft, account }) => {
     }
     setItems(items);
     setLoading(false);
+    setGlobalState('loading',{show: false})
 
     
   };
-
   const loadMarketplaceItemsOnSale = async () => {
     // Load all unsold items
-    const itemCount = await marketplace.itemCount();
-    console.log(`ITEM COUNT: ${itemCount}`);
+    // const itemCount = await marketplace.itemCount();
+    // console.log(`ITEM COUNT: ${itemCount}`);
     let items = [];
+  
     const item = await marketplace.getAllNftsOnSale();
-    for (let i = 0; i <= item.length; i++) {
-        console.log(item[i]);
-      // if (!item.sold) {
-      
+    // console.log(item[0]);
+    
+  
+    for (let i = 0; i < item.length; i++) {
+    //   console.log(item[i].itemId);
+    // console.log(item[i].nft);
+  
+    
+      console.log(`sold ${!item[i].sold}`);
       // get uri url from nft contract
-      // const uri = await nft.tokenURI(item[i].tokenId);
-      // // use uri to fetch the nft metadata stored on ipfs
-      // const response = await fetch(uri);
-      // const metadata = await response.json();
-      // // get total price of item (item price + fee)
-      // const totalPrice = await marketplace.getTotalPrice(item[i].itemId);
-      // Add item to items array
-      // items.push({
-      //   totalPrice,
+      const uri = await nft.tokenURI(item[i].tokenId);
+      // use uri to fetch the nft metadata stored on ipfs
+      const response = await fetch(uri);
+      const metadata = await response.json();
+      // get total price of item (item price + fee)
+      const totalPrice = await marketplace.getTotalPrice(item[i].itemId);
+  
+      items.push({
+        totalPrice,
        
-      //   itemId: item[i].itemId,
-      //   seller: item[i].seller,
-      //   name: metadata[i].name,
-      //   description: metadata[i].description,
-      //   image: metadata[i].image,
-      //   sold: item[i].sold,
-      // });
-      // }
+        itemId: Number(item[i].itemId),
+        seller: item[i].seller,
+        name: metadata.title,
+        description: metadata.description,
+        image: metadata.image,
+        sold: item[i].sold,
+      
+      });    
     }
-    // setLoading(false);
-    // setItems(items);
+    setItems(items);
+    setLoading(false);
+    setGlobalState('loading',{show: false})
+
+   
   };
+
+  // const loadMarketplaceItemsOnSale = async () => {
+  //   // Load all unsold items
+ 
+  //   let items = [];
+  //   const item = await marketplace.getAllNftsOnSale();
+  //   for (let i = 0; i <= item.length; i++) {
+  //       // console.log(item[i]);
+   
+      
+  //     //get uri url from nft contract
+  //     const uri = await nft.tokenURI(item[i].tokenId);
+  //     // use uri to fetch the nft metadata stored on ipfs
+  //     const response = await fetch(uri);
+  //     const metadata = await response.json();
+  //     // get total price of item (item price + fee)
+  //     const totalPrice = await marketplace.getTotalPrice(item[i].itemId);
+  //     //Add item to items array
+  //     items.push({
+  //       totalPrice,
+       
+  //       itemId: item[i].itemId,
+  //       seller: item[i].seller,
+  //       name: metadata[i].title,
+  //       description: metadata[i].description,
+  //       image: metadata[i].fileUrl,
+  //       sold: item[i].sold,
+  //     });
+      
+  //   }
+  //   setLoading(false);
+  //   setItems(items);
+  //   setGlobalState('loading',{show: false})
+
+  // };
 
 
 
@@ -176,38 +233,56 @@ const Home = ({ marketplace, nft, account }) => {
   // }, []);
 
   useEffect(() => {
-    loadMarketplaceItems();
+    loadMarketplaceItemsOnSale();
   },[]);
 
 
 if(loading)
   return (
 <div className="w-[90%] mx-auto my-10 ">
-  <h2> loading...</h2>
+    <Loading/>
+
 
 </div>
 )
   return (
-    <div className="relative">
-       <div className="absolute top-0 left-0 mb-20">
-          <h1 className="text-amber-600 text-8xl font-bold"> haha</h1>
-        </div>
-      {/* <Slider /> */}
-      {/* <MenuTab/> */}
-      {/* <Story/> */}
+       
+  
       <div className=" w-[90%] mx-auto my-10 ">
 
+    
+ 
+        <ArtWork>
+          {
+            items.map((item, idx) => (
+              <ArtItem nft={item} key={idx}  />
+            ))
+          }
+        </ArtWork>
+
+        <ReactPaginate
+        breakLabel="..."
+        nextLabel="next >"
+        onPageChange={handlePageClick}
+        pageRangeDisplayed={5}
+        pageCount={pageCount}
+        previousLabel="< previous"
+        renderOnZeroPageCount={null}
+        containerClassName="flex justify-center items-center space-x-2 mt-20"
+        activeClassName="bg-gray-900 text-white p-2"
+        pageClassName="bg-gray-200 p-2 aspect-square w-10 text-center rounded"
+        previousClassName="bg-gray-200 p-2  text-center rounded"
+        nextClassName="bg-gray-200 p-2  text-center rounded"
+      />
+
+        
+        <ShowNft nft={nft} marketplace={marketplace} account={account}  />
+        <SetPrice marketplace={marketplace}/>
+
        
-        {/* <div className="flex justify-center items-center mb-20">
-          <div className="w-5 h-px bg-gray-400"></div>
-     
-          <div className="mx-2 uppercase tracking-wide"> NFT  </div>
-          <div className="mx-2 uppercase tracking-wide"> {userId}</div>
+       
 
-          <div className="w-5 h-px bg-gray-400"></div>
-        </div> */}
-
-        <div className="">
+        {/* <div className="">
        
           {items.length > 0  ? (
 
@@ -236,11 +311,10 @@ if(loading)
 
             </div>
             
-            // <Items />
           )}
-        </div>
+        </div> */}
       </div>
-    </div>
+    
   );
 };
 

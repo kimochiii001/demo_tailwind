@@ -9,11 +9,15 @@ import { getItemList } from "../features/ItemSlice";
 import { Search } from "@mui/icons-material";
 import SearchItem from "./SearchItem";
 import { ethers } from "ethers";
+import { connectWallet } from "../service/Blockchain";
+import { useGlobalState } from "../global";
 
 
 const Header = ({ web3Handler, account, balance }) => {
   const [onToggle, setOnToggle] = useState(false);
   const dispath = useDispatch();
+
+  const [connectedAccount] = useGlobalState('connectedAccount');
 
   // const {walletAddress, balance} = useSelector(state => state.wallet);
   // console.log('walletAddress balance: ', walletAddress, balance);
@@ -51,7 +55,7 @@ const MENU_ITEM = [
           id="top-menu"
           className="basis-3/6  hidden lg:flex lg:justify-center lg:gap-8 font-medium uppercase text-sm text-gray-500 py-1"
         >
-            <SearchItem/>
+            
           
           <li className="ct-top-menu-item p-[12px]">
             <NavLink
@@ -70,7 +74,17 @@ const MENU_ITEM = [
               })}
               to="/create"
             >
-              Create
+              Upload NFT
+            </NavLink>
+          </li>
+          <li className="ct-top-menu-item p-[12px]">
+            <NavLink
+              style={({ isActive }) => ({
+                color: isActive ? "#333" : "",
+              })}
+              to="/uploadNft"
+            >
+              Make Item
             </NavLink>
           </li>
           {/* <li className="ct-top-menu-item p-[12px]">
@@ -107,7 +121,7 @@ const MENU_ITEM = [
           </svg>
         </button>
 
-        <ul className="basis-0/6 font-semibold flex justify-end lg:justify-start uppercase text-sm items-center">
+        {/* <ul className="basis-0/6 font-semibold flex justify-end lg:justify-start uppercase text-sm items-center">
           <li className="">
             <a href="#" className="flex items-center">
               <svg
@@ -126,10 +140,16 @@ const MENU_ITEM = [
               </svg>
 
               <span className="mx-2">Card</span>
-              {/* <span className='ct-badge-circle bg-red-400'>99+</span> */}
+              <span className='ct-badge-circle bg-red-400'>99+</span>
             </a>
           </li>
-        </ul>
+        </ul> */}
+        {/* <button 
+           
+            className=" basis-0/6 shadow-xl shadow-black bg-[#e32970] text-white  hover:bg-[#bd255f] md:text-xs px-5 py-2 rounded-full">
+            Create NFT
+          </button> */}
+          
 
         {
           //href={`https://etherscan.io/address/${account}`
@@ -151,7 +171,7 @@ const MENU_ITEM = [
                     >
                       <path d="M64 32C28.7 32 0 60.7 0 96V416c0 35.3 28.7 64 64 64H448c35.3 0 64-28.7 64-64V192c0-35.3-28.7-64-64-64H80c-8.8 0-16-7.2-16-16s7.2-16 16-16H448c17.7 0 32-14.3 32-32s-14.3-32-32-32H64zM416 272a32 32 0 1 1 0 64 32 32 0 1 1 0-64z" />
                     </svg>
-                    <span className="mr-2">{balance}</span>
+                    <span className="mr-2">10</span>
                   </div>
                   <div className="w-0.5 h-5 bg-gray-400"></div>
                   <div>
@@ -194,14 +214,21 @@ const MENU_ITEM = [
               </div>
             </div>
           ) : (
-            <button
-              onClick={() => {web3Handler().then(async () =>{
-                await dispath(getItemList());
-              })}}
-              className="asis-0/6 font-semibold  flex justify-start uppercase text-sm items-center ml-5"
-            >
-              Connect Wallet
-            </button>
+            <button 
+            onClick={web3Handler}
+
+            // onClick={connectWallet}
+            className="shadow-xl shadow-black bg-[#e32970] hover:bg-[#bd255f] md:text-xs px-5 py-2 rounded-full">
+            Connect Wallet
+          </button>
+            // <button
+            //   onClick={() => {web3Handler().then(async () =>{
+            //     await dispath(getItemList());
+            //   })}}
+            //   className="asis-0/6 font-semibold  flex justify-start uppercase text-sm items-center ml-5"
+            // >
+            //   Connect Wallet
+            // </button>
           )
         }
       </nav>

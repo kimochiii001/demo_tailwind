@@ -17,9 +17,13 @@ import SnackBarSuccess from '../components/SnackBarSuccess';
 //     '2SaoJGathTM74sxbYFnt10wq9AE',
 // }, })
 
+const nftABI = require("../nft-abi.json");
+
+
 const projectId = '2OdM18NSh1dijfz4i42B7zat4wq';
 const projectSecret = 'b1d224681d5e870b09f87a28a22355a0';
 const auth = 'Basic ' + Buffer.from(projectId + ':' + projectSecret).toString('base64');
+
 
 const client = ipfsHttpClient({
   host: 'ipfs.infura.io',
@@ -47,6 +51,37 @@ const[onSB, setOnSB] = useState(false);
 
 
 const [listItemSold, setListItemSold] = useState([]);
+
+const [contractNft, setContractNft] = useState(null);
+const [addressNft, setAddressNft] = useState(null);
+const [addressOwner, setAddressOwner] = useState(null);
+
+
+
+const connectNftContract = async () => {
+  try {
+    const provider = new ethers.providers.Web3Provider(window.ethereum, "any");
+            const signer = provider.getSigner();
+            const nft = new ethers.Contract(addressNft, nftABI, signer);
+            setContractNft(nft);
+            console.log('external nft', nft);
+
+  } catch (error) {
+    
+  }
+}
+
+const checkTokenUriExternal = async() => {
+  // if(addressNft === null) return;
+  try {
+    console.log(contractNft)
+    const balanceCheck =  await contractNft.balanceOf(addressOwner);
+  console.log('balance ex', balanceCheck);
+  } catch (error) {
+    
+  }
+  
+}
 
 // const uploadToIPFS = async (e) =>{
 //   e.preventDefault();
@@ -196,6 +231,8 @@ const loadMarketplaceItemsOnSale = async () => {
  
 };
 
+
+
 const loadItemOwnerOf = async () => {
   
   let items = [];
@@ -303,25 +340,45 @@ const handleToClose = (event, reason) => {
     <div className='bg-gray-100 text-center py-20'>
     <div className='mb-10'>
       
-        <input className='border-2 w-1/2'    type="file"
+        <input className='border-2 w-1/2 rounded-full file:rounded-full file:border-0 file:py-2 file:px-4 mr-4'    type="file"
                 required
                 name="file"
                 onChange={uploadToIPFS} ></input>
       </div>
       <div className='mb-10'>
        
-        <input onChange={(e) =>setName(e.target.value)} value={name}    type='text' className='border-2  w-1/2 py-2 px-2' placeholder='Name...' ></input>
+        <input onChange={(e) =>setName(e.target.value)} value={name}    type='text' className='  w-1/2 rounded-xl py-2 px-4 mr-4 bg-transparent border-2 cursor-pointer focus:ring-0' placeholder='Name...' ></input>
       </div>
 
       <div className='mb-10'>
        
-        <textarea onChange={(e) => setDescription(e.target.value)} value={description} className='border-2  w-1/2 py-2 px-2' placeholder='Description...'></textarea>
+        <textarea onChange={(e) => setDescription(e.target.value)} value={description} className='  w-1/2 py-2 px-4 mr-4 rounded-xl bg-transparent border-2 cursor-pointer focus:ring-0' placeholder='Description...'></textarea>
        
       </div>
       <div className='mb-10'>
        
-        <input onChange={(e) => setPrice(e.target.value)} value={price}  type='number' className='border-2  w-1/2 py-2 px-2' placeholder='Price in ETH...' ></input>
+        <input onChange={(e) => setPrice(e.target.value)} value={price}  type='number' className=' w-1/2 rounded-xl py-2 px-4 mr-4 bg-transparent border-2 cursor-pointer focus:ring-0' placeholder='Price in ETH...' ></input>
       </div>
+
+      <div className='mb-10'>
+       
+       <input onChange={(e) => setAddressNft(e.target.value)} value={addressNft}  type='text' className=' w-1/2 rounded-xl py-2 px-4 mr-4 bg-transparent border-2 cursor-pointer focus:ring-0' placeholder='Address Nft...' ></input>
+     </div>
+     <div className='mb-10'>
+       
+       <input onChange={(e) => setAddressOwner(e.target.value)} value={addressOwner}  type='text' className=' w-1/2 rounded-xl py-2 px-4 mr-4 bg-transparent border-2 cursor-pointer focus:ring-0' placeholder='Address Owner...' ></input>
+     </div>
+
+     <div className='mb-10'>
+     <button onClick={connectNftContract} className='w-1/2 shadow-lg shadow-black text-white bg-[#e32970] hover:bg-[#bd255f] rounded-full p-2 mt-5'>
+                    Connect Contract NFT
+                </button>
+     </div>
+     <div className='mb-10'>
+     <button onClick={checkTokenUriExternal} className='w-1/2 shadow-lg shadow-black text-white bg-[#e32970] hover:bg-[#bd255f] rounded-full p-2 mt-5'>
+                    check Balance External
+                </button>
+     </div> 
       <div>
        <button onClick={onPopUpErr} className='border-2 w-1/2 py-2 mb-5 uppercase bg-coffee-400 font-medium'>POP UP</button>
        <button onClick={onPopUpSuss} className='border-2 w-1/2 py-2 mb-5 uppercase bg-coffee-400 font-medium'>POP UP</button>
